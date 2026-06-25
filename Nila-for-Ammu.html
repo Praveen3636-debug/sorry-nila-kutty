@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>நிலா — உனக்காக</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Thambi+2:wght@500;600;700;800&family=Catamaran:wght@300;400;500;600;700&family=Mukta+Malar:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===================== TOKENS ===================== */
+:root{
+  --midnight:#0B0E2E;
+  --midnight-deep:#05061a;
+  --midnight-soft:#13173f;
+  --rose:#7A1F2B;
+  --rose-light:#C2495A;
+  --rose-glow:#ff6b81;
+  --gold:#D9B872;
+  --gold-soft:#f0d9a6;
+  --silver:#ECEAF6;
+  --silver-dim:#9C9CC0;
+  --display:'Baloo Thambi 2', 'Catamaran', sans-serif;
+  --body:'Catamaran', 'Mukta Malar', sans-serif;
+  --accent:'Mukta Malar', 'Catamaran', sans-serif;
+  --ease:cubic-bezier(.22,.85,.32,1);
+}
+*{box-sizing:border-box;}
+html,body{
+  margin:0; padding:0; width:100%; height:100%;
+  background:var(--midnight-deep);
+  color:var(--silver);
+  font-family:var(--body);
+  overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+body{ overscroll-behavior:none; }
+::selection{ background:var(--rose); color:var(--silver); }
+button{ font-family:var(--body); }
+a{ color:var(--gold-soft); }
+
+/* ===================== BACKGROUND CANVAS ===================== */
+#bg-canvas{
+  position:fixed; inset:0; width:100%; height:100%;
+  display:block; z-index:0;
+  background:radial-gradient(ellipse at 50% 30%, #11164a 0%, #0B0E2E 45%, #05061a 100%);
+}
+
+/* ===================== STAGE / PAGES ===================== */
+#stage{
+  position:fixed; inset:0; z-index:2;
+  width:100%; height:100%;
+}
+.page{
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  padding: clamp(20px,6vw,60px) clamp(16px,6vw,80px);
+  opacity:0; visibility:hidden;
+  pointer-events:none;
+  transform:scale(1.02);
+  transition:opacity .9s var(--ease), transform .9s var(--ease);
+}
+.page.active{
+  opacity:1; visibility:visible; pointer-events:auto;
+  transform:scale(1);
+}
+.page-inner{
+  max-width: 720px;
+  width:100%;
+  text-align:center;
+  display:flex; flex-direction:column; align-items:center;
+  gap: clamp(14px,2.5vh,22px);
+}
+.eyebrow{
+  font-family:var(--accent); letter-spacing:.18em; text-transform:uppercase;
+  font-size:clamp(11px,1.4vw,13px); color:var(--gold-soft); opacity:.85;
+}
+.headline{
+  font-family:var(--display); font-weight:700;
+  font-size:clamp(28px,7vw,52px); line-height:1.18;
+  color:var(--silver);
+  text-shadow:0 0 18px rgba(217,184,114,.35), 0 0 42px rgba(122,31,43,.25);
+  margin:0;
+}
+.headline.glow-strong{
+  text-shadow:0 0 12px rgba(236,234,246,.9), 0 0 40px rgba(217,184,114,.7), 0 0 80px rgba(122,31,43,.5);
+}
+.body-text{
+  font-family:var(--body); font-weight:400;
+  font-size:clamp(16px,2.6vw,20px); line-height:1.85;
+  color:var(--silver-dim);
+  max-width:560px;
+}
+.body-text b, .body-text strong{ color:var(--silver); font-weight:600; }
+.tag{
+  font-family:var(--accent); font-size:clamp(13px,1.8vw,15px);
+  color:var(--rose-light); letter-spacing:.04em;
+}
+
+/* buttons */
+.btn{
+  font-family:var(--display); font-weight:600;
+  font-size:clamp(14px,1.8vw,16px);
+  padding:14px 34px; border-radius:999px;
+  border:1px solid rgba(217,184,114,.5);
+  background:linear-gradient(180deg, rgba(122,31,43,.55), rgba(11,14,46,.55));
+  color:var(--silver);
+  cursor:pointer; min-height:48px; min-width:48px;
+  transition: transform .35s var(--ease), box-shadow .35s var(--ease), background .35s var(--ease);
+  box-shadow:0 0 0px rgba(217,184,114,0);
+  backdrop-filter: blur(6px);
+}
+.btn:hover, .btn:focus-visible{
+  transform: translateY(-2px) scale(1.04);
+  box-shadow:0 6px 30px rgba(217,184,114,.35);
+  background:linear-gradient(180deg, rgba(122,31,43,.75), rgba(11,14,46,.75));
+}
+.btn:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
+.btn[disabled]{ opacity:.35; cursor:not-allowed; pointer-events:none; box-shadow:none; transform:none; }
+.btn-ghost{
+  background:transparent; border:1px solid rgba(236,234,246,.25);
+}
+.btn-ghost:hover{ background:rgba(236,234,246,.06); }
+.btn-primary{
+  border-color: var(--gold);
+  background:linear-gradient(180deg, rgba(217,184,114,.25), rgba(122,31,43,.55));
+}
+
+/* ===================== NAV ARROWS ===================== */
+.nav-arrow{
+  position:fixed; bottom:clamp(14px,3vh,30px); top:auto; transform:none;
+  width:46px; height:46px; border-radius:50%;
+  border:1px solid rgba(236,234,246,.25);
+  background:rgba(11,14,46,.55);
+  color:var(--silver); font-size:20px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; z-index:30; backdrop-filter:blur(6px);
+  transition:opacity .3s, transform .3s, background .3s;
+}
+.nav-arrow:hover{ background:rgba(122,31,43,.5); }
+.nav-arrow.prev{ left:clamp(10px,3vw,28px); }
+.nav-arrow.next{ right:clamp(10px,3vw,28px); }
+.nav-arrow[disabled]{ opacity:0; pointer-events:none; }
+.nav-arrow:focus-visible{ outline:2px solid var(--gold); }
+
+/* ===================== PROGRESS ORB (moon phase) ===================== */
+#progress-orb{
+  position:fixed; top:clamp(10px,2vh,20px); right:clamp(10px,2vw,20px);
+  z-index:40; width:56px; height:56px; cursor:pointer; border:none; background:none;
+  padding:0;
+}
+#progress-orb svg{ width:100%; height:100%; }
+#progress-orb .orb-label{
+  position:absolute; bottom:-18px; left:50%; transform:translateX(-50%);
+  font-size:10px; color:var(--silver-dim); font-family:var(--body); white-space:nowrap;
+}
+#progress-orb:focus-visible{ outline:2px solid var(--gold); border-radius:50%; }
+
+/* ===================== CONSTELLATION MAP ===================== */
+#constellation-overlay{
+  position:fixed; inset:0; z-index:60;
+  background:rgba(5,6,26,.88); backdrop-filter:blur(10px);
+  opacity:0; pointer-events:none; visibility:hidden;
+  transition:opacity .5s var(--ease);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+}
+#constellation-overlay.open{ opacity:1; pointer-events:auto; visibility:visible; }
+#constellation-overlay h2{
+  font-family:var(--display); color:var(--gold-soft); margin: 6px 0 4px;
+  font-size:clamp(18px,3.4vw,24px);
+}
+#constellation-overlay p{ color:var(--silver-dim); font-size:13px; margin:0 0 8px; }
+#constellation-map{
+  position:relative; width:min(92vw,820px); height:min(64vh,520px);
+}
+#constellation-map svg{ position:absolute; inset:0; width:100%; height:100%; }
+.star-node{
+  position:absolute; width:30px; height:30px; transform:translate(-50%,-50%);
+  border-radius:50%; border:none; cursor:pointer; padding:0;
+  background:radial-gradient(circle, var(--silver-dim) 0%, transparent 70%);
+}
+.star-node .dot{
+  width:9px; height:9px; border-radius:50%; background:var(--silver-dim);
+  margin:10.5px auto; box-shadow:0 0 6px rgba(236,234,246,.4);
+  transition:all .3s;
+}
+.star-node.visited .dot{ background:var(--gold-soft); box-shadow:0 0 14px rgba(217,184,114,.9); }
+.star-node.current .dot{ background:var(--rose-glow); box-shadow:0 0 18px rgba(255,107,129,.9); transform:scale(1.4); }
+.star-node:hover .dot, .star-node:focus-visible .dot{ background:var(--gold); box-shadow:0 0 18px rgba(217,184,114,1); }
+.star-node .star-tip{
+  position:absolute; top:-26px; left:50%; transform:translateX(-50%);
+  font-size:10.5px; color:var(--silver); background:rgba(11,14,46,.85);
+  padding:3px 7px; border-radius:6px; white-space:nowrap; opacity:0; pointer-events:none;
+  transition:opacity .2s; border:1px solid rgba(217,184,114,.3);
+}
+.star-node:hover .star-tip, .star-node:focus-visible .star-tip{ opacity:1; }
+#close-constellation{
+  margin-top:14px;
+}
+
+/* ===================== TRANSITION VEIL ===================== */
+#veil{
+  position:fixed; inset:0; z-index:50; pointer-events:none;
+  background:radial-gradient(circle at 50% 50%, rgba(236,234,246,0) 0%, rgba(5,6,26,1) 75%);
+  opacity:0;
+}
+#veil.show{ opacity:1; transition:opacity .42s var(--ease); }
+#veil.hide{ opacity:0; transition:opacity .55s var(--ease); }
+
+/* ===================== MISC SHARED ===================== */
+.stack-list{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:12px; width:100%; max-width:480px; }
+.stack-list li{
+  font-size:clamp(15px,2.2vw,18px); color:var(--silver);
+  background:rgba(122,31,43,.18); border:1px solid rgba(217,184,114,.25);
+  border-radius:14px; padding:12px 18px; opacity:0; transform:translateY(10px);
+  transition:opacity .6s var(--ease), transform .6s var(--ease);
+}
+.stack-list li.show{ opacity:1; transform:translateY(0); }
+.page-counter{ font-family:var(--accent); font-size:12px; color:var(--silver-dim); letter-spacing:.12em; }
+.sr-only{ position:absolute; width:1px;height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+
+@media (prefers-reduced-motion: reduce){
+  .page{ transition:opacity .3s linear; transform:none !important; }
+  *{ animation-duration:.01ms !important; animation-iteration-count:1 !important; }
+}
+
+@media (max-width:480px){
+  .nav-arrow{ width:40px; height:40px; }
+  #progress-orb{ width:46px; height:46px; }
+  .page{ padding-bottom:78px; }
+}
+
+/* ===================== PAGE 3 — ANGRY BIRD ===================== */
+#bird-wrap{ height:160px; display:flex; align-items:center; justify-content:center; }
+#bird{ position:relative; width:120px; height:120px; cursor:pointer; transform-origin:center bottom; }
+#bird .bird-body{
+  position:absolute; left:50%; top:55%; transform:translate(-50%,-50%);
+  width:78px; height:70px; border-radius:50% 50% 48% 48%;
+  background:var(--bird-color, #B3263A);
+  transition:background .5s var(--ease);
+  box-shadow:0 0 24px rgba(179,38,58,.5);
+}
+#bird .bird-wing{
+  position:absolute; top:48%; width:34px; height:46px; border-radius:50% 40% 60% 50%;
+  background:var(--bird-color, #B3263A); opacity:.92;
+  transition:background .5s var(--ease), transform .35s var(--ease);
+}
+#bird .bird-wing.left{ left:6px; transform:rotate(-18deg); }
+#bird .bird-wing.right{ left:80px; transform:rotate(18deg) scaleX(-1); }
+#bird.angry .bird-wing{ animation:ruffle 0.35s infinite alternate; }
+#bird.calmer .bird-wing{ animation:ruffle 0.7s infinite alternate; }
+#bird.calm .bird-wing{ animation:none; transform:rotate(6deg); }
+#bird.calm .bird-wing.right{ transform:rotate(-6deg) scaleX(-1); }
+@keyframes ruffle{ from{ transform:rotate(-26deg) translateY(0); } to{ transform:rotate(-10deg) translateY(-3px); } }
+#bird .bird-eye{
+  position:absolute; top:30px; width:14px; height:14px; border-radius:50%;
+  background:#1b1130;
+}
+#bird .bird-eye.left{ left:22px; } #bird .bird-eye.right{ left:46px; }
+#bird .bird-eye .brow{
+  position:absolute; top:-9px; left:-3px; width:18px; height:4px; border-radius:3px;
+  background:#1b1130; transform:rotate(18deg); transition:transform .5s var(--ease), opacity .5s;
+}
+#bird .bird-eye.right .brow{ transform:rotate(-18deg); left:-1px; }
+#bird.calm .bird-eye .brow{ opacity:0; }
+#bird .bird-beak{
+  position:absolute; top:46px; left:32px; width:0; height:0;
+  border-left:9px solid transparent; border-right:9px solid transparent;
+  border-top:12px solid var(--gold-soft);
+}
+#bird.angry{ --bird-color:#B3263A; }
+#bird.calmer{ --bird-color:#C2495A; }
+#bird.calm{ --bird-color:#e7b7a3; }
+
+/* ===================== PAGE 6 — MEMORY RAIN ===================== */
+#memory-rain{ position:relative; width:100%; max-width:280px; height:90px; }
+#memory-rain .umbrella{ font-size:54px; filter:drop-shadow(0 0 10px rgba(217,184,114,.4)); animation:sway 3.2s ease-in-out infinite; }
+@keyframes sway{ 0%,100%{ transform:rotate(-4deg);} 50%{ transform:rotate(4deg);} }
+
+/* ===================== PAGE 9-11 — ROSE BLOOM ===================== */
+.rose-bloom{
+  width:64px; height:64px; border-radius:50%;
+  background:radial-gradient(circle, var(--rose-glow) 0%, var(--rose) 55%, transparent 100%);
+  box-shadow:0 0 40px rgba(255,107,129,.55);
+  animation:bloom-pulse 2.6s ease-in-out infinite;
+}
+@keyframes bloom-pulse{ 0%,100%{ transform:scale(.9); opacity:.8;} 50%{ transform:scale(1.12); opacity:1;} }
+
+/* ===================== PAGE 8 — CATCH THE ROSES GAME ===================== */
+#roses-game{ width:100%; max-width:420px; }
+#roses-stage{
+  position:relative; width:100%; height:240px; border-radius:18px;
+  background:rgba(11,14,46,.35); border:1px solid rgba(217,184,114,.25);
+  overflow:hidden; touch-action:none;
+}
+.falling-rose{
+  position:absolute; top:-30px; font-size:26px; cursor:pointer; user-select:none;
+  filter:drop-shadow(0 0 6px rgba(255,107,129,.6));
+  background:none; border:none; padding:6px; line-height:1;
+}
+#roses-reveal{
+  margin-top:12px; font-family:var(--display); font-size:clamp(16px,2.6vw,20px);
+  color:var(--gold-soft); min-height:28px; display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
+}
+.reveal-word{ opacity:0; transform:translateY(8px); transition:opacity .5s var(--ease), transform .5s var(--ease); }
+.reveal-word.show{ opacity:1; transform:translateY(0); }
+
+/* ===================== PAGE 12 — LIGHT THE MOON GAME ===================== */
+#moon-game{ width:min(70vw,260px); height:min(70vw,260px); }
+#moon-game-svg{ width:100%; height:100%; }
+.mg-star{ cursor:pointer; transition:fill .3s, r .3s; }
+.mg-star.lit{ fill:var(--gold-soft); }
+
+/* ===================== PAGE 13 — MOON DRAG HINT ===================== */
+#moon-drag-hint{ opacity:.8; }
+
+/* ===================== PAGE 15 — FORGIVENESS MAZE ===================== */
+#maze-wrap{ display:flex; justify-content:center; }
+#maze-grid{
+  display:grid; grid-template-columns:repeat(5, 44px); grid-template-rows:repeat(5, 44px);
+  gap:6px;
+}
+.maze-cell{
+  width:44px; height:44px; border-radius:10px;
+  background:rgba(236,234,246,.05); border:1px solid rgba(236,234,246,.1);
+  display:flex; align-items:center; justify-content:center; font-size:18px;
+  cursor:default; transition:background .3s, border-color .3s;
+}
+.maze-cell.path{ background:rgba(217,184,114,.12); border-color:rgba(217,184,114,.35); cursor:pointer; }
+.maze-cell.path.lit{ background:rgba(217,184,114,.4); box-shadow:0 0 14px rgba(217,184,114,.6); }
+.maze-cell.current{ box-shadow:0 0 16px rgba(255,107,129,.9); }
+
+/* ===================== PAGE 19 — FORGIVE BUTTONS ===================== */
+#forgive-buttons{ position:relative; display:flex; gap:24px; align-items:center; justify-content:center; min-height:200px; width:100%; max-width:420px; }
+#forgive-yes{ transition:transform .3s var(--ease), box-shadow .3s var(--ease), background .3s; }
+#forgive-yes.grown{ transform:scale(1.35); box-shadow:0 8px 40px rgba(217,184,114,.6); }
+#forgive-no{ position:relative; transition:transform .25s var(--ease), opacity .25s; }
+#forgive-no.shrunk{ transform:scale(.7); opacity:.7; }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div id="veil"></div>
+
+<button id="progress-orb" aria-label="உன் பயணத்தின் நிலா நிலையைப் பார்க்க, கிளிக் செய்தால் வழிகாட்டி திரை திறக்கும்">
+  <svg viewBox="0 0 56 56">
+    <defs>
+      <radialGradient id="moonGrad" cx="35%" cy="35%" r="65%">
+        <stop offset="0%" stop-color="#ECEAF6"/>
+        <stop offset="60%" stop-color="#cfd0e8"/>
+        <stop offset="100%" stop-color="#9C9CC0"/>
+      </radialGradient>
+      <clipPath id="moonClip"><circle cx="28" cy="28" r="22"/></clipPath>
+    </defs>
+    <circle cx="28" cy="28" r="24" fill="rgba(236,234,246,0.06)"/>
+    <circle cx="28" cy="28" r="22" fill="#1b1f4a"/>
+    <g clip-path="url(#moonClip)">
+      <rect id="orb-fill" x="6" y="6" width="0" height="44" fill="url(#moonGrad)"/>
+    </g>
+    <circle cx="28" cy="28" r="22" fill="none" stroke="rgba(217,184,114,.6)" stroke-width="1.4"/>
+  </svg>
+  <span class="orb-label"><span id="orb-text">1 / 20</span></span>
+</button>
+
+<div id="constellation-overlay" role="dialog" aria-label="வழிகாட்டி வான்படம்">
+  <h2>உன் பயணத்தின் வான்படம்</h2>
+  <p>எந்த நட்சத்திரத்தையும் தொடு, அந்த காட்சிக்குப் போகலாம்</p>
+  <div id="constellation-map"><svg id="constellation-lines"></svg></div>
+  <button id="close-constellation" class="btn btn-ghost">மூடு</button>
+</div>
+
+<div class="nav-arrow prev" id="nav-prev" role="button" tabindex="0" aria-label="முந்தைய காட்சி">&#10094;</div>
+<div class="nav-arrow next" id="nav-next" role="button" tabindex="0" aria-label="அடுத்த காட்சி">&#10095;</div>
+
+<main id="stage">
+
+<!-- ============ PAGE 1 : TITLE ============ -->
+<section class="page active" id="page-1" data-title="தொடக்கம்">
+  <div class="page-inner">
+    <div class="eyebrow">இது உனக்காக மட்டும்</div>
+    <h1 class="headline glow-strong" style="font-size:clamp(48px,16vw,120px); margin:0;" id="nila-title">நிலா</h1>
+    <p class="tag">நிலா — அதாவது நீ, என் வெளிச்சம்</p>
+    <p class="body-text">ஒரு சின்ன பயணம் உனக்காக செய்திருக்கேன். இருபது சின்ன காட்சிகள். அவசரம் இல்ல, மனசு வச்சு பாரு.</p>
+    <button class="btn btn-primary" data-goto="next" id="btn-continue">தொடரவும் →</button>
+  </div>
+</section>
+
+<!-- ============ PAGE 2 : OPENING CONFESSION ============ -->
+<section class="page" id="page-2" data-title="ஒப்புதல்">
+  <div class="page-inner">
+    <div class="eyebrow">ஒப்புதல்</div>
+    <h2 class="headline">எனக்குத் தெரியும்...</h2>
+    <p class="body-text">நீ இப்போ என் மேல கோபமா இருக்க, அது நியாயம்தான். நான் தப்பு செஞ்சேன். அதை சரி செய்ய ஓடி வரல, ஆனா இப்போவாச்சும் வந்திருக்கேன். கொஞ்சம் நேரம் தாரியா, உன்கிட்ட பேச?</p>
+    <button class="btn" data-goto="next">பேசலாம் →</button>
+  </div>
+</section>
+
+<!-- ============ PAGE 3 : ANGRY BIRD ============ -->
+<section class="page" id="page-3" data-title="கோபப் பறவை">
+  <div class="page-inner">
+    <div class="eyebrow">இது கொஞ்சம் நீ மாதிரி 😅</div>
+    <h2 class="headline">இவனை கொஞ்சம் சமாதானம் பண்ணு</h2>
+    <div id="bird-wrap" aria-hidden="false">
+      <div id="bird" class="angry" role="button" tabindex="0" aria-label="பறவையை தொடவும்">
+        <div class="bird-wing left"></div>
+        <div class="bird-wing right"></div>
+        <div class="bird-body">
+          <div class="bird-eye left"><span class="brow"></span></div>
+          <div class="bird-eye right"><span class="brow"></span></div>
+          <div class="bird-beak"></div>
+        </div>
+      </div>
+    </div>
+    <p class="body-text" id="bird-msg">இவன் ரொம்ப கோபமா இருக்கான்... மெதுவா தொடு, பார்க்கலாம் சிரிக்குதான்னு.</p>
+    <button class="btn" id="bird-next" data-goto="next" disabled>தொடரவும் →</button>
+  </div>
+</section>
+
+<!-- ============ PAGE 4 : WHY I'M SORRY ============ -->
+<section class="page" id="page-4" data-title="மன்னிப்பு">
+  <div class="page-inner">
+    <div class="eyebrow">மனசார</div>
+    <h2 class="headline">நான் வருந்துறேன்</h2>
+    <p class="body-text">நீ பேசினப்போ, நான் சரியா கேக்கல. என் பக்கம் மட்டும் நினைச்சு, உன் மனசை புரிஞ்சுக்கல. அதனால உனக்கு வலி கொடுத்துட்டேன். அது தப்பு. அதுக்காக மனசார மன்னிப்பு கேக்கிறேன், நிலா.</p>
+    <button class="btn" data-goto="next">தொடரவும் →</button>
+  </div>
+</section>
+
+<!-- ============ PAGE 5 : WHAT I SHOULD HAVE DONE ============ -->
+<section class="page" id="page-5" data-title="உணர்தல்">
+  <div class="page-inner">
+    <div class="eyebrow">நான் செய்திருக்க வேண்டியது</div>
+    <h2 class="headline">அமைதியா கேட்டிருக்கணும்</h2>
+    <p class="body-text">நீ பேசும்போது வாதாடாம, அமைதியா கேட்டு, உன் மனசை புரிஞ்சுக்க முயற்சி செய்திருக்கணும். நான் அப்படி செய்யல. இனிமே, உன் வார்த்தைகளை முதலில் கேப்பேன்.</p>
+    <button class="btn" data-goto="next">தொடரவும் →</button>
+  </div>
+</section>
+
+<!-- ============ PAGE 6 : MEMORY 1 ============ -->
+<section class="page" id="page-6" data-title="ஞாபகம் 1">
+  <div class="page-inner">
+    <div class="eyebrow">ஞாபகம் 1</div>
+    <div id="memory-rain"><div class="umbrella">☂</div></div>
+    <h2 class="headline">அந்த மழை நாள்</h2>
+    <p class="body-text">ஒரே ஒரு குடை, ஆனா நாம இரண்டு பேரும் முழுசா நனைஞ்சு, கடைசியில் சிரிச்சு சிரிச்சு வயித்து வலிச்சது ஞாபகம் இருக்கா? அந்த நிமிஷம், உலகம் முழுக்க நாம இரண்டு பேர் மட்டும்தான் இருந்த மாதிரி இருந்தது.</p>
+    <button class="btn" data-goto="next">இன்னொரு ஞாபகம் →</button>
+  </div>
+</section>
+
+<!-- ============ PAGE 7 : MEMORY 2 ============ -->
+<section class="page" id="page-7" data-title="ஞாபகம் 2">
+  <div class="page-inner">
+    <div class="eyebrow">ஞாபகம் 2 😂</div>
+    <div class="emoji-row" style="font-size:clamp(34px,8vw,54px);">😂🍟😅</div>
+    <h2 class="headline">அந்த கிண்டல் நாள்</h2>
+    <p class="body-text">நீ அன்னைக்கு என்னை கிண்டல் பண்ணி பண்ணி, கடைசியில் நானே என் மேல சிரிச்சுக்கிட்டேன், ஞாபகம் இருக்கா? உன் கிண்டல் இருந்தாதான் என் நாள் முழுசா சந்தோஷமா இருக்கும்.</p>
+    <button class="btn" data-goto="next">தொடரவும் →</button>
+  </div>
+</section>
+
+<!-- ============ PAGE 8 : MINI-GAME CATCH ROSES ============ -->
+<section class="page" id="page-8" data-title="ரோஜா விளையாட்டு">
+  <div class="page-inner">
+    <div class="eyebrow">🎮 ரோஜாக்களை பிடி</div>
+    <h2 class="headline">விழும் முன் பிடிச்சுக்கோ</h2>
+    <p class="body-text" id="roses-hint">ஒவ்வொரு ரோஜாவையும் தொடு. எல்லாமே சேர்ந்தா, ஒரு வரி தெரியும்.</p>
+    <div id="roses-game">
+      <div id="roses-stage"></div>
+      <div id="roses-reveal" aria-live="polite"></div>
+    </div>
+    <button class="btn" id="roses-next" data-goto="next" disabled>தொடரவும் →</button>
+  </div>
+</section>
+
+<!-- ============ PAGE 9 : WHY I LOVE YOU 1 ============ -->
+<section class="page" id="page-9" data-title="காரணம் 1">
+  <div class="page-inner">
+    <div class="eyebrow">காரணம் 1</div>
+    <div class="rose-bloom" aria-hidden="true"></div>
+    <h2 class="headline">நீ எவ்வளவு கோபமா இருந்தாலும்...</h2>
+    <p class="body-text">உள்ளுக்குள் ரொம்ப அன்பான மனசு உள்ளவ நீ. அதுதான் உன்னை இன்னும் கொஞ்சம் அதிகமா நேசிக்க வைக்குது.</p>
+    <button class="btn" data-goto="next">இன்னொரு காரணம் →</button>
+  </div>
+</section>
+
+<!-- ============ PAGE 10 : WHY I LOVE YOU 2 ============ -->
+<section class="page" id="page-10" data-title="காரணம் 2">
+  <div class="page-inner">
+    <div class="eyebrow">காரணம் 2</div>
+    <div class="rose-bloom" aria-hidden="true"></div>
+    <h2 class="headline">சின்ன சின்ன விஷயத்துல சந்தோஷம்</h2>
+    <p class="body-text">ஒரு சின்ன ஐஸ்க்ரீம் கூட உனக்கு பெருசு சந்தோஷமா ஆகிடும். அந்த எளிமையான சந்தோஷம், என் மனசையும் வெளிச்சமா ஆக்குது.</p>
+    <button class="btn" data-goto="next">இன்னொரு காரணம் →</button>
+  </div>
+</section>
+
+<!-- ============ PAGE 11 : WHY I LOVE YOU 3 ============ -->
+<section class="page" id="page-11" data-title="காரணம் 3">
+  <div class="page-inner">
+    <div class="eyebrow">காரணம் 3</div>
+    <div class="rose-bloom" aria-hidden="true"></div>
+    <h2 class="headline">நீ என்னை நல்லவனா மாத்துற விதம்</h2>
+    <p class="body-text">நீ என்னை சரி செய்ய நினைக்குற ஒவ்வொரு முறையும், நான் இன்னும் கொஞ்சம் நல்லவனா மாறுறேன். அதுக்கு நான் என்றும் நன்றிக்கடன் பட்டிருப்பேன்.</p>
+    <button class="btn" data-goto="next">தொடரவும் →</button>
+  </div>
+</section>
+
+<!-- ============ PAGE 12 : MINI-GAME LIGHT THE MOON ============ -->
+<section class="page" id="page-12" data-title="நிலா விளையாட்டு">
+  <div class="page-inner">
+    <div class="eyebrow">🎮 நிலாவை ஏற்று</div>
+    <h2 class="headline">ஒவ்வொரு நட்சத்திரமும் வெளிச்சம் தரும்</h2>
+    <p class="body-text">நட்சத்திரங்களை தொட்டு, நிலாவுக்குள் வெளிச்சம் நிரப்பு.</p>
+    <div id="moon-game">
+      <svg id="moon-game-svg" viewBox="0 0 300 300"></svg>
+    </div>
+    <button class="btn" id="moon-game-next" data-goto="next" disabled>தொடரவும் →</button>
+  </div>
+</section>
+
+<!-- ============ PAGE 13 : THE MOON PAGE (interactive 3D) ============ -->
+<section class="page" id="page-13" data-title="நிலா">
+  <div class="page-inner">
+    <div class="eyebrow">இதுவே நிலா</div>
+    <h2 class="headline">இழுத்து, சுத்தி பாரு</h2>
+    <p class="body-text">இந்த நிலாவை விரல்ல தொட்டு சுத்தலாம். எவ்வளவு வேணும்னாலும் பாரு, அவசரம் இல்ல.</p>
+    <div class="page-counter" id="moon-drag-hint">↔ இழுத்து சுத்து</div>
+    <button class="btn" data-goto="next">தொடரவும் →</button>
+  </div>
+</section>
+
+<!-- ============ PAGE 14 : QUOTE BUTTON PAGE ============ -->
+<section class="page" id="page-14" data-title="இதயத்தின் வரிகள்">
+  <div class="page-inner">
+    <div class="eyebrow">அழுத்தி பாரு</div>
+    <h2 class="headline" id="quote-display" style="min-height:120px; display:flex; align-items:center; justify-content:center;">அழுத்தினா, ஒரு வரி வரும்.</h2>
+    <button class="btn btn-primary" id="quote-btn">என் இதயத்தின் வரிகள்</button>
+    <button class="btn btn-ghost" data-goto="next">தொடரவும் →</button>
+  </div>
+</section>
+
+<!-- ============ PAGE 15 : MINI-GAME FORGIVENESS MAZE ============ -->
+<section class="page" id="page-15" data-title="மன்னிப்பு பாதை">
+  <div class="page-inner">
+    <div class="eyebrow">🎮 மன்னிப்பு பாதை</div>
+    <h2 class="headline">இதயத்தை பாதை வழியா நடத்து</h2>
+    <p class="body-text">ஒளிரும் வழியில் தொட்டு, இதயத்தை இறுதி வரை கொண்டு போ. தப்பு செஞ்சாலும் பரவாயில்லை.</p>
+    <div id="maze-wrap"><div id="maze-grid"></div></div>
+    <p class="body-text" id="maze-msg" style="min-height:30px;"></p>
+    <button class="btn" id="maze-next" data-goto="next" disabled>தொடரவும் →</button>
+  </div>
+</section>
+
+<!-- ============ PAGE 16 : WHAT YOU MEAN TO ME ============ -->
+<section class="page" id="page-16" data-title="நீ என் எல்லாம்">
+  <div class="page-inner">
+    <div class="eyebrow">நீ எனக்கு என்ன</div>
+    <h2 class="headline">நீ வெறும் காதலி இல்ல</h2>
+    <ul class="stack-list" id="meaning-list">
+      <li>நீ என் அமைதி.</li>
+      <li>நீ என் சந்தோஷம்.</li>
+      <li>நீ என் தைரியம்.</li>
+      <li>உன்னோட இருக்கும்போதுதான், நான் முழுசா நான்னு உணர்றேன்.</li>
+    </ul>
+    <button class="btn" data-goto="next">தொடரவும் →</button>
+  </div>
+</section>
+
+<!-- ============ PAGE 17 : I PROMISE ============ -->
+<section class="page" id="page-17" data-title="வாக்குறுதிகள்">
+  <div class="page-inner">
+    <div class="eyebrow">நான் வாக்களிக்கிறேன்</div>
+    <h2 class="headline">இனிமே...</h2>
+    <ul class="stack-list" id="promise-list">
+      <li>உன் வார்த்தைகளை கவனமா கேப்பேன்.</li>
+      <li>சண்டை வந்தாலும் உன்னை புண்படுத்தாம பேசுவேன்.</li>
+      <li>உன் மனசை முன்னாடி, என் ego-வை பின்னாடி வைப்பேன்.</li>
+      <li>ஒவ்வொரு நாளும் உன்னை மதிக்கிறேன்னு உணர்த்துவேன்.</li>
+      <li>நீ யாரோட இருந்தாலும், நான் உன் பக்கம்தான் இருப்பேன்.</li>
+    </ul>
+    <button class="btn" data-goto="next">தொடரவும் →</button>
+  </div>
+</section>
+
+<!-- ============ PAGE 18 : ROSE GARDEN ============ -->
+<section class="page" id="page-18" data-title="ரோஜாத் தோட்டம்">
+  <div class="page-inner">
+    <div class="eyebrow">ரோஜாத் தோட்டம்</div>
+    <h2 class="headline">நம் எதிர்காலம் இப்படி பூக்கணும்</h2>
+    <p class="body-text">இந்த ரோஜாக்கள் எல்லாம் ஒருநாள் வாடிப் போகும், ஆனா நம் காதல் இன்னும் அழகா பூக்கணும்னு நான் நம்புறேன். இனிமேலான ஒவ்வொரு நாளும், இப்படி ஒரு புது ரோஜா பூக்கணும்.</p>
+    <button class="btn" data-goto="next">தொடரவும் →</button>
+  </div>
+</section>
+
+<!-- ============ PAGE 19 : FORGIVE ME ============ -->
+<section class="page" id="page-19" data-title="மன்னித்துவிடு?">
+  <div class="page-inner">
+    <h2 class="headline glow-strong" style="font-size:clamp(32px,8vw,56px);">மன்னித்துவிடு?</h2>
+    <div id="forgive-buttons">
+      <button class="btn btn-primary" id="forgive-yes">ஆமா 💗</button>
+      <button class="btn btn-ghost" id="forgive-no">இல்ல 😅</button>
+    </div>
+    <p class="body-text" id="forgive-msg" style="min-height:24px;"></p>
+  </div>
+</section>
+
+<!-- ============ PAGE 20 : PROPOSAL / FINALE ============ -->
+<section class="page" id="page-20" data-title="முடிவு">
+  <div class="page-inner">
+    <div class="eyebrow">நிலவும் ரோஜாவும் சேர்ந்தால்</div>
+    <h2 class="headline glow-strong" style="font-size:clamp(26px,6vw,40px);">என்றென்றும் உன்னுடையவன்</h2>
+    <h1 class="headline glow-strong" style="font-size:clamp(46px,14vw,100px); margin:4px 0;">அம்மு</h1>
+    <p class="body-text">நிலா... என்னை மன்னிச்சு, மறுபடியும் என் கையை பிடிப்பியா?</p>
+    <form id="reply-form">
+      <label for="reply-box" class="sr-only">உன் பதில்</label>
+      <textarea id="reply-box" rows="3" placeholder="இங்க பதில் எழுது..." style="width:min(420px,90vw); max-width:420px; border-radius:14px; border:1px solid rgba(217,184,114,.4); background:rgba(11,14,46,.5); color:var(--silver); padding:12px 14px; font-family:var(--body); font-size:15px; resize:vertical;"></textarea>
+      <div style="margin-top:12px;">
+        <button class="btn btn-primary" id="reply-send" type="button">பதில் அனுப்பு 💌</button>
+      </div>
+    </form>
+    <p class="page-counter" id="reply-status" aria-live="polite"></p>
+  </div>
+</section>
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* =====================================================================
+   NILA — cinematic apology/proposal site
+   Sections: 1) Three.js background  2) Page/nav system  3) Constellation
+   4) Mini-games (bird, roses, moon, maze)  5) Quote button  6) Forgive  7) Reply
+   ===================================================================== */
+(function(){
+"use strict";
+
+var TOTAL_PAGES = 20;
+var currentPage = 1;
+var visited = { 1:true };
+var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var isMobile = window.matchMedia('(max-width:700px)').matches || /Mobi|Android/i.test(navigator.userAgent);
+
+/* ---------------------------------------------------------------------
+   1. THREE.JS CINEMATIC BACKGROUND
+--------------------------------------------------------------------- */
+var ThreeBG = (function(){
+  var ok = (typeof THREE !== 'undefined');
+  if(!ok){ return { ready:false, onPage:function(){}, }; }
+
+  var canvas = document.getElementById('bg-canvas');
+  var renderer, scene, camera, clock;
+  var starField, moonGroup, moonMesh, glowSprite, pointLight;
+  var petals = [];
+  var mouseX = 0, mouseY = 0;
+  var dragging = false, dragStartX = 0, dragMoonRotY = 0;
+  var camZTarget = 12, moonPosTarget, moonScaleTarget;
+
+  function makeGlowTexture(){
+    var c = document.createElement('canvas'); c.width = c.height = 256;
+    var ctx = c.getContext('2d');
+    var g = ctx.createRadialGradient(128,128,0,128,128,128);
+    g.addColorStop(0, 'rgba(255,247,224,1)');
+    g.addColorStop(0.35, 'rgba(255,230,190,0.55)');
+    g.addColorStop(1, 'rgba(255,230,190,0)');
+    ctx.fillStyle = g; ctx.fillRect(0,0,256,256);
+    return new THREE.CanvasTexture(c);
+  }
+
+  function petalShape(){
+    var s = new THREE.Shape();
+    s.moveTo(0,0);
+    s.bezierCurveTo(0.32,0.28, 0.36,0.82, 0,1.15);
+    s.bezierCurveTo(-0.36,0.82, -0.32,0.28, 0,0);
+    return s;
+  }
+
+  function init(){
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha:true, antialias:false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 100);
+    camera.position.set(0,0,12);
+    clock = new THREE.Clock();
+
+    scene.add(new THREE.AmbientLight(0x5a4d8a, 0.7));
+
+    /* starfield */
+    var starCount = isMobile ? 450 : 1100;
+    var starGeo = new THREE.BufferGeometry();
+    var starPos = new Float32Array(starCount*3);
+    for(var i=0;i<starCount;i++){
+      starPos[i*3]   = (Math.random()-0.5)*46;
+      starPos[i*3+1] = (Math.random()-0.5)*30;
+      starPos[i*3+2] = (Math.random()-0.5)*30 - 4;
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos,3));
+    var starMat = new THREE.PointsMaterial({ color:0xECEAF6, size:0.065, sizeAttenuation:true, transparent:true, opacity:0.9 });
+    starField = new THREE.Points(starGeo, starMat);
+    scene.add(starField);
+
+    /* moon */
+    moonGroup = new THREE.Group();
+    var moonGeo = new THREE.SphereGeometry(1.6, 28, 28);
+    var moonMat = new THREE.MeshStandardMaterial({ color:0xECEAF6, emissive:0xC9C9E8, emissiveIntensity:0.4, roughness:0.95, metalness:0.0 });
+    moonMesh = new THREE.Mesh(moonGeo, moonMat);
+    moonGroup.add(moonMesh);
+    moonGroup.position.set(2.8, 1.9, -5);
+    scene.add(moonGroup);
+
+    var glowMat = new THREE.SpriteMaterial({ map:makeGlowTexture(), color:0xfff3d6, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false });
+    glowSprite = new THREE.Sprite(glowMat);
+    glowSprite.scale.set(7.5,7.5,1);
+    glowSprite.position.copy(moonGroup.position);
+    scene.add(glowSprite);
+
+    pointLight = new THREE.PointLight(0xfff0d0, 1.3, 24);
+    pointLight.position.copy(moonGroup.position);
+    scene.add(pointLight);
+
+    /* rose petals */
+    var petalCount = isMobile ? 12 : 24;
+    var pGeo = new THREE.ShapeGeometry(petalShape());
+    for(var p=0;p<petalCount;p++){
+      var mat = new THREE.MeshBasicMaterial({ color: (p%3===0)?0xC2495A:0x7A1F2B, side:THREE.DoubleSide, transparent:true, opacity:0.82 });
+      var mesh = new THREE.Mesh(pGeo, mat);
+      var scl = 0.35 + Math.random()*0.5;
+      mesh.scale.set(scl,scl,scl);
+      mesh.position.set((Math.random()-0.5)*16, (Math.random()-0.5)*12, (Math.random()-0.5)*8-2);
+      mesh.rotation.z = Math.random()*Math.PI*2;
+      mesh.userData = { speed: 0.15+Math.random()*0.25, rot:(Math.random()-0.5)*0.6, seed:Math.random()*10, baseX:mesh.position.x };
+      petals.push(mesh);
+      scene.add(mesh);
+    }
+
+    moonPosTarget = moonGroup.position.clone();
+    moonScaleTarget = moonGroup.scale.clone();
+
+    window.addEventListener('resize', onResize);
+    window.addEventListener('pointermove', onPointerMove, {passive:true});
+    canvas.addEventListener('pointerdown', onMoonDragStart);
+    window.addEventListener('pointermove', onMoonDragMove, {passive:true});
+    window.addEventListener('pointerup', onMoonDragEnd);
+    onResize();
+    requestAnimationFrame(loop);
+  }
+
+  function onResize(){
+    if(!renderer) return;
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+  }
+  function onPointerMove(e){
+    mouseX = (e.clientX/window.innerWidth - 0.5);
+    mouseY = (e.clientY/window.innerHeight - 0.5);
+  }
+  function onMoonDragStart(e){
+    if(currentPage !== 13) return;
+    dragging = true; dragStartX = e.clientX; dragMoonRotY = moonGroup.rotation.y;
+  }
+  function onMoonDragMove(e){
+    if(!dragging) return;
+    var dx = e.clientX - dragStartX;
+    moonGroup.rotation.y = dragMoonRotY + dx*0.012;
+  }
+  function onMoonDragEnd(){ dragging = false; }
+
+  function loop(t){
+    requestAnimationFrame(loop);
+    if(document.hidden || !renderer) return;
+    var dt = Math.min(clock.getDelta(), 0.05);
+    if(!prefersReduced){
+      starField.rotation.y += 0.012*dt + mouseX*0.0015;
+      starField.rotation.x += (mouseY*0.06 - starField.rotation.x)*0.02;
+      if(!dragging) moonGroup.rotation.y += 0.06*dt;
+      glowSprite.material.opacity = 0.6 + Math.sin(t*0.0006)*0.18;
+      petals.forEach(function(m){
+        m.position.y -= m.userData.speed*dt;
+        m.position.x = m.userData.baseX + Math.sin(t*0.0004 + m.userData.seed)*0.6;
+        m.rotation.z += m.userData.rot*dt;
+        if(m.position.y < -7){ m.position.y = 7; m.userData.baseX = (Math.random()-0.5)*16; }
+      });
+    }
+    camera.position.z += (camZTarget - camera.position.z)*0.035;
+    moonGroup.position.lerp(moonPosTarget, 0.035);
+    moonGroup.scale.lerp(moonScaleTarget, 0.035);
+    glowSprite.position.copy(moonGroup.position);
+    pointLight.position.copy(moonGroup.position);
+    renderer.render(scene, camera);
+  }
+
+  function onPage(n){
+    if(!moonPosTarget) return;
+    if(n === 13){
+      camZTarget = 9;
+      moonPosTarget.set(0, 0.2, -2.2);
+      moonScaleTarget.set(1.7,1.7,1.7);
+    } else if(n === 18){
+      camZTarget = 8.5;
+      moonPosTarget.set(-2.6, 1.6, -5);
+      moonScaleTarget.set(1,1,1);
+    } else if(n === 20){
+      camZTarget = 9.5;
+      moonPosTarget.set(0, 0.6, -2.6);
+      moonScaleTarget.set(2.1,2.1,2.1);
+    } else {
+      camZTarget = 12;
+      moonPosTarget.set(2.8, 1.9, -5);
+      moonScaleTarget.set(1,1,1);
+    }
+  }
+
+  try{ init(); }catch(e){ console.warn('3D background disabled:', e); return { ready:false, onPage:function(){} }; }
+  return { ready:true, onPage:onPage };
+})();
+
+/* ---------------------------------------------------------------------
+   2. PAGE / NAVIGATION SYSTEM
+--------------------------------------------------------------------- */
+var veil = document.getElementById('veil');
+var orbFill = document.getElementById('orb-fill');
+var orbText = document.getElementById('orb-text');
+var navPrev = document.getElementById('nav-prev');
+var navNext = document.getElementById('nav-next');
+
+function updateOrb(n){
+  var w = Math.round((n/TOTAL_PAGES)*44);
+  orbFill.setAttribute('width', w);
+  orbFill.setAttribute('x', 6 + (44-w));
+  orbText.textContent = n + ' / ' + TOTAL_PAGES;
+}
+function updateArrows(n){
+  navPrev.setAttribute('aria-disabled', n===1 ? 'true':'false');
+  navNext.setAttribute('aria-disabled', n===TOTAL_PAGES ? 'true':'false');
+  navPrev.style.opacity = n===1 ? '0.25' : '1';
+  navNext.style.opacity = n===TOTAL_PAGES ? '0.25' : '1';
+}
+
+function showPage(n){
+  n = Math.max(1, Math.min(TOTAL_PAGES, n));
+  if(n === currentPage) return;
+  veil.classList.add('show');
+  setTimeout(function(){
+    var cur = document.querySelector('.page.active');
+    if(cur) cur.classList.remove('active');
+    var next = document.getElementById('page-'+n);
+    next.classList.add('active');
+    currentPage = n;
+    visited[n] = true;
+    updateOrb(n); updateArrows(n);
+    ThreeBG.onPage(n);
+    onPageEnter(n);
+    veil.classList.remove('show'); veil.classList.add('hide');
+    setTimeout(function(){ veil.classList.remove('hide'); }, 600);
+  }, prefersReduced ? 60 : 420);
+}
+
+document.querySelectorAll('[data-goto="next"]').forEach(function(btn){
+  btn.addEventListener('click', function(){ showPage(currentPage+1); });
+});
+navPrev.addEventListener('click', function(){ showPage(currentPage-1); });
+navNext.addEventListener('click', function(){ showPage(currentPage+1); });
+[navPrev, navNext].forEach(function(el){
+  el.addEventListener('keydown', function(e){
+    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); el.click(); }
+  });
+});
+document.addEventListener('keydown', function(e){
+  if(document.getElementById('constellation-overlay').classList.contains('open')) return;
+  if(e.key === 'ArrowRight') showPage(currentPage+1);
+  if(e.key === 'ArrowLeft') showPage(currentPage-1);
+});
+
+updateOrb(1); updateArrows(1);
+
+/* ---------------------------------------------------------------------
+   3. CONSTELLATION MAP
+--------------------------------------------------------------------- */
+(function buildConstellation(){
+  var map = document.getElementById('constellation-map');
+  var svg = document.getElementById('constellation-lines');
+  var orb = document.getElementById('progress-orb');
+  var overlay = document.getElementById('constellation-overlay');
+  var closeBtn = document.getElementById('close-constellation');
+  var coords = [];
+
+  for(var i=0;i<TOTAL_PAGES;i++){
+    var x = 6 + i*(88/(TOTAL_PAGES-1));
+    var y = 50 + Math.sin(i*0.85)*30 + (i%2===0?6:-6);
+    y = Math.max(10, Math.min(90, y));
+    coords.push({x:x,y:y});
+  }
+
+  var pathD = 'M ' + coords.map(function(c){ return c.x+' '+c.y; }).join(' L ');
+  svg.setAttribute('viewBox','0 0 100 100');
+  svg.setAttribute('preserveAspectRatio','none');
+  var pathEl = document.createElementNS('http://www.w3.org/2000/svg','path');
+  pathEl.setAttribute('d', pathD);
+  pathEl.setAttribute('fill','none');
+  pathEl.setAttribute('stroke','rgba(217,184,114,0.35)');
+  pathEl.setAttribute('stroke-width','0.4');
+  svg.appendChild(pathEl);
+
+  coords.forEach(function(c, idx){
+    var n = idx+1;
+    var sec = document.getElementById('page-'+n);
+    var btn = document.createElement('button');
+    btn.className = 'star-node';
+    btn.style.left = c.x+'%'; btn.style.top = c.y+'%';
+    btn.setAttribute('data-n', n);
+    btn.setAttribute('aria-label', n+'. '+sec.dataset.title);
+    btn.innerHTML = '<span class="dot"></span><span class="star-tip">'+n+'. '+sec.dataset.title+'</span>';
+    btn.addEventListener('click', function(){
+      var target = parseInt(this.getAttribute('data-n'),10);
+      closeOverlay();
+      showPage(target);
+    });
+    map.appendChild(btn);
+  });
+
+  function refresh(){
+    map.querySelectorAll('.star-node').forEach(function(btn){
+      var n = parseInt(btn.getAttribute('data-n'),10);
+      btn.classList.toggle('visited', !!visited[n]);
+      btn.classList.toggle('current', n===currentPage);
+    });
+  }
+  function openOverlay(){ refresh(); overlay.classList.add('open'); }
+  function closeOverlay(){ overlay.classList.remove('open'); }
+
+  orb.addEventListener('click', openOverlay);
+  closeBtn.addEventListener('click', closeOverlay);
+  overlay.addEventListener('click', function(e){ if(e.target===overlay) closeOverlay(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeOverlay(); });
+})();
+
+/* ---------------------------------------------------------------------
+   4a. MINI-GAME — ANGRY BIRD (page 3)
+--------------------------------------------------------------------- */
+(function birdGame(){
+  var bird = document.getElementById('bird');
+  var msg = document.getElementById('bird-msg');
+  var nextBtn = document.getElementById('bird-next');
+  var taps = 0;
+  function tap(){
+    if(bird.classList.contains('calm')) return;
+    taps++;
+    if(taps >= 6){
+      bird.classList.remove('angry','calmer'); bird.classList.add('calm');
+      msg.textContent = 'நல்லா இருக்கு இப்போ... நீயும் இப்படி அமைதியா இருக்கலாமா? 💛';
+      nextBtn.disabled = false;
+    } else if(taps >= 3){
+      bird.classList.remove('angry'); bird.classList.add('calmer');
+      msg.textContent = 'இன்னும் கொஞ்சம்... தொடர்ந்து தொடு.';
+    }
+  }
+  bird.addEventListener('click', tap);
+  bird.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); tap(); } });
+})();
+
+/* ---------------------------------------------------------------------
+   4b. MINI-GAME — CATCH THE FALLING ROSES (page 8)
+--------------------------------------------------------------------- */
+var RosesGame = (function(){
+  var words = ['நீ','தான்','என்','நிலா,','என்','வெளிச்சம்,','என்','வாழ்க்கை.'];
+  var stage = document.getElementById('roses-stage');
+  var reveal = document.getElementById('roses-reveal');
+  var nextBtn = document.getElementById('roses-next');
+  var caught = 0, started = false, completed = false, spawnTimer = null;
+
+  function spawn(){
+    if(completed) return;
+    var el = document.createElement('button');
+    el.className = 'falling-rose';
+    el.textContent = '🌹';
+    el.setAttribute('aria-label','ரோஜாவை பிடி');
+    var w = stage.clientWidth || 300;
+    el.style.left = (10 + Math.random()*(w-50)) + 'px';
+    var duration = 4.2 + Math.random()*2.2;
+    el.style.transition = 'transform '+duration+'s linear';
+    stage.appendChild(el);
+    requestAnimationFrame(function(){
+      el.style.transform = 'translateY(' + ((stage.clientHeight||240)+30) + 'px)';
+    });
+    var timeoutId = setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); if(!completed) spawn(); }, duration*1000+50);
+    el.addEventListener('click', function(){
+      clearTimeout(timeoutId);
+      if(el.parentNode) el.parentNode.removeChild(el);
+      catchOne();
+      if(!completed) spawn();
+    });
+  }
+
+  function catchOne(){
+    if(caught >= words.length) return;
+    var span = document.createElement('span');
+    span.className = 'reveal-word';
+    span.textContent = words[caught];
+    reveal.appendChild(span);
+    requestAnimationFrame(function(){ span.classList.add('show'); });
+    caught++;
+    if(caught >= words.length){
+      completed = true;
+      nextBtn.disabled = false;
+    }
+  }
+
+  function start(){
+    if(started || completed) return;
+    started = true;
+    spawn();
+    if(!isMobile) spawn();
+  }
+  function reset(){
+    started = false; caught = 0; completed = false;
+    reveal.innerHTML = '';
+    stage.innerHTML = '';
+    nextBtn.disabled = true;
+  }
+  return { start:start, reset:reset, isCompleted:function(){ return completed; } };
+})();
+
+/* ---------------------------------------------------------------------
+   4c. MINI-GAME — LIGHT THE MOON (page 12)
+--------------------------------------------------------------------- */
+var MoonGame = (function(){
+  var svg = document.getElementById('moon-game-svg');
+  var nextBtn = document.getElementById('moon-game-next');
+  var built = false, lit = 0, total = 10, completed = false;
+
+  function build(){
+    if(built) return;
+    built = true;
+    svg.setAttribute('viewBox','0 0 300 300');
+    var defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+    var grad = document.createElementNS('http://www.w3.org/2000/svg','radialGradient');
+    grad.setAttribute('id','mgGrad'); grad.setAttribute('cx','35%'); grad.setAttribute('cy','35%'); grad.setAttribute('r','65%');
+    [['0%','#ECEAF6'],['60%','#cfd0e8'],['100%','#9C9CC0']].forEach(function(s){
+      var stop = document.createElementNS('http://www.w3.org/2000/svg','stop');
+      stop.setAttribute('offset', s[0]); stop.setAttribute('stop-color', s[1]);
+      grad.appendChild(stop);
+    });
+    defs.appendChild(grad); svg.appendChild(defs);
+
+    var disk = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    disk.setAttribute('cx','150'); disk.setAttribute('cy','150'); disk.setAttribute('r','110');
+    disk.setAttribute('fill','#161a44'); disk.setAttribute('stroke','rgba(217,184,114,.5)'); disk.setAttribute('stroke-width','2');
+    disk.id = 'mg-disk';
+    svg.appendChild(disk);
+
+    var text = document.createElementNS('http://www.w3.org/2000/svg','text');
+    text.setAttribute('x','150'); text.setAttribute('y','162'); text.setAttribute('text-anchor','middle');
+    text.setAttribute('font-size','42'); text.setAttribute('fill','#D9B872'); text.setAttribute('opacity','0');
+    text.style.fontFamily = "'Baloo Thambi 2', sans-serif"; text.style.fontWeight = '700';
+    text.style.transition = 'opacity 1.2s ease';
+    text.textContent = 'அம்மு';
+    text.id = 'mg-name';
+    svg.appendChild(text);
+
+    for(var i=0;i<total;i++){
+      var ang = Math.random()*Math.PI*2;
+      var r = 18 + Math.random()*82;
+      var cx = 150 + r*Math.cos(ang);
+      var cy = 150 + r*Math.sin(ang);
+      var star = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      star.setAttribute('cx', cx.toFixed(1)); star.setAttribute('cy', cy.toFixed(1)); star.setAttribute('r','7');
+      star.setAttribute('fill','#5a5a86');
+      star.setAttribute('class','mg-star');
+      star.addEventListener('click', function(){ light(this); });
+      svg.appendChild(star);
+    }
+  }
+
+  function light(star){
+    if(star.classList.contains('lit') || completed) return;
+    star.classList.add('lit');
+    star.setAttribute('r','9');
+    lit++;
+    if(lit >= total){
+      completed = true;
+      document.getElementById('mg-disk').setAttribute('fill','url(#mgGrad)');
+      document.getElementById('mg-name').setAttribute('opacity','1');
+      nextBtn.disabled = false;
+    }
+  }
+  return { build:build, isCompleted:function(){ return completed; } };
+})();
+
+/* ---------------------------------------------------------------------
+   4d. MINI-GAME — FORGIVENESS MAZE (page 15)
+--------------------------------------------------------------------- */
+var MazeGame = (function(){
+  var grid = document.getElementById('maze-grid');
+  var msg = document.getElementById('maze-msg');
+  var nextBtn = document.getElementById('maze-next');
+  var path = [0,1,2,7,12,11,16,17,22,23];
+  var built = false, step = 0, completed = false;
+  var cells = [];
+
+  function build(){
+    if(built) return;
+    built = true;
+    for(var i=0;i<25;i++){
+      var cell = document.createElement('div');
+      cell.className = 'maze-cell';
+      grid.appendChild(cell);
+      cells.push(cell);
+    }
+    path.forEach(function(idx, order){
+      cells[idx].classList.add('path');
+      cells[idx].setAttribute('data-order', order);
+      cells[idx].addEventListener('click', function(){
+        tryStep(parseInt(this.getAttribute('data-order'),10), this);
+      });
+    });
+    cells[path[0]].classList.add('current');
+    cells[path[0]].textContent = '🌙';
+    cells[path[path.length-1]].textContent = '💗';
+  }
+
+  function tryStep(order, el){
+    if(completed) return;
+    if(order === step+1){
+      cells[path[step]].classList.remove('current');
+      cells[path[step]].classList.add('lit');
+      step = order;
+      el.classList.add('current','lit');
+      if(step === path.length-1){
+        completed = true;
+        msg.textContent = 'பாரு... கடைசிவரை வந்துட்டாய். கஷ்டமான பாதை இருந்தாலும், நாம சேர்ந்து கடக்கலாம்.';
+        nextBtn.disabled = false;
+      }
+    }
+  }
+  return { build:build };
+})();
+
+/* ---------------------------------------------------------------------
+   5. QUOTE BUTTON (page 14)
+--------------------------------------------------------------------- */
+(function quotePage(){
+  var quotes = [
+    'நிலா இல்லாம இரவு இருக்காது, நீ இல்லாம என் வாழ்க்கை இருக்காது.',
+    'உன் கோபம் கூட எனக்கு பிடிக்கும், ஏன்னா அதுக்குப் பின்னாடி உன் அன்பு இருக்கு.',
+    'மன்னிப்பு கேக்குறது சுலபம் இல்ல, ஆனா நீ இல்லாம இருக்குறது அதைவிட கஷ்டம்.',
+    'ஒவ்வொரு நிலாவையும் பார்க்கும்போது, அதுல உன் முகம் தெரியுது.',
+    'நீ பேசாம இருந்தா, என் உலகமே அமைதி இல்லாம போயிடும்.',
+    'தப்பு செஞ்சேன் தான், ஆனா உன்னை நேசிக்குறதுல தப்பே இல்ல.',
+    'உன் சிரிப்புதான் என் நாளை பிறப்பிக்குற சூரியன்.',
+    'நீ கிட்ட இருந்தா மட்டும்தான் என் இதயம் முழுசா இருக்கு.',
+    'ரோஜாவுக்கு முள் இருக்கும், ஆனா அதன் அழகு குறையாது — நம் சண்டைக்கும் அப்படிதான்.',
+    'உன்னை இழக்குறதை நினைச்சா, என் நெஞ்சு நடுங்குது.',
+    'எத்தனை தப்பு செஞ்சாலும், என் கடைசி நினைப்பு நீதான்.',
+    'உன் கையை பிடிச்சுக்க, இன்னும் ஒரு வாழ்நாள் முழுக்க காத்திருப்பேன்.',
+    'நிலவு தூரம் இருந்தாலும் ஒளி தாரும், நீ பக்கத்தில் இருந்தே என் வெளிச்சம்.',
+    'உன்னோட இருக்கும் ஒவ்வொரு நிமிஷமும், என் வாழ்க்கையின் அழகான பக்கம்.',
+    'சொல்லாம புரிஞ்சுக்குற ஒரே ஆள் நீதான், அதனால்தான் உன்னை இழக்க பயமா இருக்கு.'
+  ];
+  var display = document.getElementById('quote-display');
+  var btn = document.getElementById('quote-btn');
+  var last = -1;
+  btn.addEventListener('click', function(){
+    var idx;
+    do{ idx = Math.floor(Math.random()*quotes.length); } while(idx===last && quotes.length>1);
+    last = idx;
+    display.style.opacity = '0';
+    display.style.transform = 'translateY(6px)';
+    display.style.transition = 'opacity .35s ease, transform .35s ease';
+    setTimeout(function(){
+      display.textContent = quotes[idx];
+      display.style.opacity = '1';
+      display.style.transform = 'translateY(0)';
+    }, 360);
+  });
+})();
+
+/* ---------------------------------------------------------------------
+   6. FORGIVE ME PAGE (page 19)
+--------------------------------------------------------------------- */
+(function forgivePage(){
+  var wrap = document.getElementById('forgive-buttons');
+  var yes = document.getElementById('forgive-yes');
+  var no = document.getElementById('forgive-no');
+  var msg = document.getElementById('forgive-msg');
+  var lines = ['இல்ல, அது தப்பு பட்டுச்சு! 😅','முயற்சி நல்லா இருக்கு, ஆனா இல்ல!','இந்த பட்டனுக்கு ஓட்டம் தெரியும் 🏃'];
+  var lineIdx = 0;
+
+  var spots = [
+    {x:'2%', y:'2%'}, {x:'70%', y:'2%'}, {x:'2%', y:'78%'}, {x:'70%', y:'78%'},
+    {x:'38%', y:'85%'}, {x:'38%', y:'0%'}
+  ];
+  var lastSpot = -1;
+  function dodge(){
+    var idx;
+    do{ idx = Math.floor(Math.random()*spots.length); } while(idx===lastSpot && spots.length>1);
+    lastSpot = idx;
+    no.style.position = 'absolute';
+    no.style.left = spots[idx].x;
+    no.style.top = spots[idx].y;
+    no.classList.add('shrunk');
+    msg.textContent = lines[lineIdx % lines.length];
+    lineIdx++;
+  }
+  no.addEventListener('pointerenter', dodge);
+  no.addEventListener('touchstart', function(e){ e.preventDefault(); dodge(); }, {passive:false});
+  yes.addEventListener('pointerenter', function(){ yes.classList.add('grown'); });
+  yes.addEventListener('pointerleave', function(){ yes.classList.remove('grown'); });
+  yes.addEventListener('click', function(){ showPage(20); });
+})();
+
+/* ---------------------------------------------------------------------
+   7. REPLY / MAILTO (page 20)
+--------------------------------------------------------------------- */
+(function replyPage(){
+  var box = document.getElementById('reply-box');
+  var send = document.getElementById('reply-send');
+  var status = document.getElementById('reply-status');
+  send.addEventListener('click', function(){
+    var text = box.value.trim();
+    if(!text){
+      status.textContent = 'பதில் எழுதிட்டு அனுப்பு... 💭';
+      return;
+    }
+    var subject = encodeURIComponent('என் பதில் நிலாவுக்கு 🌙');
+    var body = encodeURIComponent(text);
+    window.location.href = 'mailto:?subject='+subject+'&body='+body;
+    status.textContent = 'மனசார நன்றி 💌';
+  });
+})();
+
+/* ---------------------------------------------------------------------
+   ON PAGE ENTER — lazy-build games, stagger list reveals
+--------------------------------------------------------------------- */
+function staggerList(id){
+  var list = document.getElementById(id);
+  if(!list) return;
+  Array.prototype.forEach.call(list.children, function(li, i){
+    setTimeout(function(){ li.classList.add('show'); }, i*220);
+  });
+}
+
+function onPageEnter(n){
+  if(n === 8){ RosesGame.start(); }
+  if(n === 12){ MoonGame.build(); }
+  if(n === 15){ MazeGame.build(); }
+  if(n === 16){ staggerList('meaning-list'); }
+  if(n === 17){ staggerList('promise-list'); }
+}
+
+/* initial state */
+updateArrows(1);
+
+})();
+</script>
+
+</body>
+</html>
